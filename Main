@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <wiringPi.h>    // For Raspberry Pi GPIO control
+#include <unistd.h>      // For sleep function
+
+#define TIRE_SENSOR_PIN_FRONT_LEFT 0    // Pin for front-left tire sensor
+#define TIRE_SENSOR_PIN_FRONT_RIGHT 1   // Pin for front-right tire sensor
+#define TIRE_SENSOR_PIN_REAR_LEFT 2     // Pin for rear-left tire sensor
+#define TIRE_SENSOR_PIN_REAR_RIGHT 3    // Pin for rear-right tire sensor
+#define ALERT_PIN 4                    // Pin for alert LED or Buzzer
+#define PRESSURE_THRESHOLD 30          // Threshold for tire pressure (e.g., in psi)
+
+void setup() {
+    wiringPiSetup();  // Initialize WiringPi library for GPIO control
+    pinMode(TIRE_SENSOR_PIN_FRONT_LEFT, INPUT);  // Set sensor pins as input
+    pinMode(TIRE_SENSOR_PIN_FRONT_RIGHT, INPUT);
+    pinMode(TIRE_SENSOR_PIN_REAR_LEFT, INPUT);
+    pinMode(TIRE_SENSOR_PIN_REAR_RIGHT, INPUT);
+    pinMode(ALERT_PIN, OUTPUT);  // Set alert pin as output
+}
+
+int readTirePressure(int sensorPin) {
+    return analogRead(sensorPin);  // Read tire pressure sensor value
+}
+
+void checkTirePressure(int pressure) {
+    if (pressure < PRESSURE_THRESHOLD) {
+        digitalWrite(ALERT_PIN, HIGH);  // Trigger alert if pressure is low
+    } else {
+        digitalWrite(ALERT_PIN, LOW);   // Turn off alert if pressure is safe
+    }
+}
+
+void displayTirePressure(int frontLeft, int frontRight, int rearLeft, int rearRight) {
+    printf("Front Left Tire Pressure: %d psi\n", frontLeft);
+    printf("Front Right Tire Pressure: %d psi\n", frontRight);
+    printf("Rear Left Tire Pressure: %d psi\n", rearLeft);
+    printf("Rear Right Tire Pressure: %d psi\n", rearRight);
+}
+
+int main() {
+    setup();
+
+    while (1) {
+        // Read the tire pressures for each tire
+        int frontLeftPressure = readTirePressure(TIRE_SENSOR_PIN_FRONT_LEFT);
+        int frontRightPressure = readTirePressure(TIRE_SENSOR_PIN_FRONT_RIGHT);
+        int rearLeftPressure = readTirePressure(TIRE_SENSOR_PIN_REAR_LEFT);
+        int rearRightPressure = readTirePressure(TIRE_SENSOR_PIN_REAR_RIGHT);
+
+        // Display the tire pressures
+        displayTirePressure(frontLeftPressure, frontRightPressure, rearLeftPressure, rearRightPressure);
+        
+        // Check the tire pressures and alert if necessary
+        checkTirePressure(frontLeftPressure);
+        checkTirePressure(frontRightPressure);
+        checkTirePressure(rearLeftPressure);
+        checkTirePressure(rearRightPressure);
+
+        // Wait for 1 second before reading again
+        sleep(1);
+    }
+
+    return 0;
+}
